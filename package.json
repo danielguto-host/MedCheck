@@ -1,0 +1,13 @@
+{
+  "name": "medcheck",
+  "version": "1.0.0",
+  "description": "Verificador de corantes em medicamentos",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["medicamentos", "alergias", "corantes"],
+  "author": "",
+  "license": "MIT"
+}

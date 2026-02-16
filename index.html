@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MedCheck">
+    <meta name="theme-color" content="#ef4444">
+    <title>MedCheck - Verificador de Corantes</title>
+    
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23ef4444' width='100' height='100' rx='20'/><path fill='white' d='M50 25 L60 45 L50 40 L40 45 Z M30 50 h40 M50 55 v20'/></svg>">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 50%, #fffbeb 100%);
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #fee2e2;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .header-content {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        
+        .logo {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #ef4444, #f59e0b);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .logo svg { width: 24px; height: 24px; color: white; }
+        .title h1 { font-size: 20px; font-weight: 700; color: #111827; }
+        .title p { font-size: 12px; color: #6b7280; }
+        
+        .history-btn {
+            padding: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        
+        .history-btn:hover { background: #f3f4f6; }
+        
+        .container { max-width: 768px; margin: 0 auto; padding: 24px 16px 128px; }
+        
+        .alert-banner {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .alert-content { display: flex; gap: 12px; }
+        .alert-icon { width: 20px; height: 20px; color: #dc2626; flex-shrink: 0; margin-top: 2px; }
+        .alert-text h3 { font-weight: 600; color: #7f1d1d; margin-bottom: 4px; }
+        .alert-text ul { list-style: none; font-size: 14px; color: #991b1b; }
+        .alert-text li { margin: 4px 0; }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            border: 1px solid #e5e7eb;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px; }
+        .input-wrapper { position: relative; }
+        .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: #9ca3af; }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 12px 12px 48px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s;
+            outline: none;
+        }
+        
+        input[type="text"]:focus { border-color: #ef4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1); }
+        input[type="text"]:disabled { background: #f9fafb; cursor: not-allowed; }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ef4444, #f59e0b);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover { box-shadow: 0 6px 8px rgba(0,0,0,0.15); transform: translateY(-1px); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .divider { position: relative; margin: 24px 0; text-align: center; }
+        .divider::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #e5e7eb; }
+        .divider span { position: relative; background: white; padding: 0 12px; color: #6b7280; font-size: 14px; }
+        
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .file-upload-label:hover { border-color: #ef4444; background: #fef2f2; }
+        .file-upload-label svg { width: 20px; height: 20px; color: #6b7280; }
+        .file-upload-label span { color: #374151; font-weight: 500; }
+        input[type="file"] { display: none; }
+        
+        .image-preview { margin-top: 16px; position: relative; }
+        .image-preview img { width: 100%; border-radius: 12px; border: 1px solid #e5e7eb; }
+        .image-preview button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .result-card {
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            border: 2px solid;
+            padding: 24px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .result-card.danger { background: #fef2f2; border-color: #fca5a5; }
+        .result-card.safe { background: #f0fdf4; border-color: #86efac; }
+        
+        .result-header { display: flex; align-items: start; gap: 16px; margin-bottom: 16px; }
+        
+        .result-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .result-icon.danger { background: #ef4444; }
+        .result-icon.safe { background: #22c55e; }
+        .result-icon svg { width: 28px; height: 28px; color: white; }
+        
+        .result-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+        .result-title.danger { color: #7f1d1d; }
+        .result-title.safe { color: #14532d; }
+        
+        .result-info { font-size: 14px; }
+        .result-info > div { margin-bottom: 12px; }
+        .result-info label { font-weight: 600; color: #374151; display: block; margin-bottom: 4px; }
+        .result-info p, .result-info ul { color: #111827; }
+        .result-info ul { list-style: none; padding-left: 0; }
+        .result-info li { margin: 4px 0; }
+        .result-notes { padding-top: 12px; border-top: 1px solid #e5e7eb; margin-top: 12px; }
+        .result-confidence { font-size: 12px; color: #6b7280; padding-top: 8px; }
+        
+        .info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 16px; padding: 16px; margin-top: 32px; }
+        .info-card h4 { font-size: 14px; font-weight: 600; color: #1e3a8a; margin-bottom: 8px; }
+        .info-card ul { list-style: none; font-size: 12px; color: #1e40af; }
+        .info-card li { margin: 4px 0; }
+        
+        .history-panel { background: white; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); border: 1px solid #e5e7eb; padding: 24px; margin-bottom: 24px; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .history-header h3 { font-weight: 700; color: #111827; }
+        .history-header button { background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px; }
+        .history-list { max-height: 384px; overflow-y: auto; }
+        
+        .history-item { padding: 16px; border-radius: 12px; border: 2px solid; margin-bottom: 12px; }
+        .history-item.danger { background: #fef2f2; border-color: #fecaca; }
+        .history-item.safe { background: #f0fdf4; border-color: #bbf7d0; }
+        .history-item-content { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+        .history-item h4 { font-weight: 600; color: #111827; font-size: 14px; }
+        .history-item p { font-size: 12px; color: #6b7280; margin-top: 4px; }
+        .history-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .history-item.danger svg { color: #dc2626; }
+        .history-item.safe svg { color: #16a34a; }
+        
+        .error-card { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+        .error-content { display: flex; align-items: start; gap: 12px; }
+        .error-content svg { width: 24px; height: 24px; color: #dc2626; flex-shrink: 0; }
+        .error-content h3 { font-weight: 700; color: #7f1d1d; margin-bottom: 4px; }
+        .error-content p { color: #991b1b; font-size: 14px; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none; }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="title">
+                    <h1>MedCheck</h1>
+                    <p>Verificador de Corantes</p>
+                </div>
+            </div>
+            <button class="history-btn" onclick="toggleHistory()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="alert-banner">
+            <div class="alert-content">
+                <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="alert-text">
+                    <h3>Alergias Registradas</h3>
+                    <ul>
+                        <li>• <strong>CI 77491</strong> - Óxido de Ferro Vermelho</li>
+                        <li>• <strong>CI 77492</strong> - Óxido de Ferro Amarelo</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <form id="searchForm" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">Nome do Medicamento</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" id="queryInput" placeholder="Ex: Dipirona Monoidratada 500mg Medley">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-primary" id="submitBtn">Verificar Medicamento</button>
+            </form>
+
+            <div class="divider"><span>ou</span></div>
+
+            <label for="fileInput" class="file-upload-label">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>Enviar Foto da Bula</span>
+            </label>
+            <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="handleImageUpload(event)">
+
+            <div id="imagePreview" class="image-preview hidden">
+                <img id="previewImg" src="" alt="Preview">
+                <button onclick="clearImage()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="resultsContainer"></div>
+
+        <div id="historyPanel" class="history-panel hidden">
+            <div class="history-header">
+                <h3>Histórico Recente</h3>
+                <button onclick="toggleHistory()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="historyList" class="history-list"></div>
+        </div>
+
+        <div class="info-card">
+            <h4>💡 Como usar</h4>
+            <ul>
+                <li>• Digite o nome comercial completo do medicamento</li>
+                <li>• Inclua a dosagem e o laboratório quando possível</li>
+                <li>• Ou tire uma foto da bula/embalagem</li>
+                <li>• Sempre confira a bula original antes de usar</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let history = [];
+        let currentImageData = null;
+        
+        // A URL da API será automaticamente a mesma do domínio quando hospedado no Vercel
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api/check-medication'
+            : '/api/check-medication';
+
+        function loadHistory() {
+            try {
+                const saved = localStorage.getItem('medicationHistory');
+                if (saved) { history = JSON.parse(saved); renderHistory(); }
+            } catch (e) { console.log('Erro ao carregar histórico'); }
+        }
+
+        function saveHistory() {
+            try { localStorage.setItem('medicationHistory', JSON.stringify(history)); }
+            catch (e) { console.log('Erro ao salvar histórico'); }
+        }
+
+        function toggleHistory() { document.getElementById('historyPanel').classList.toggle('hidden'); }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<p style="text-align:center;color:#6b7280;padding:20px;">Nenhum histórico ainda</p>';
+                return;
+            }
+
+            list.innerHTML = history.map(item => `
+                <div class="history-item ${item.containsDangerousColorants ? 'danger' : 'safe'}">
+                    <div class="history-item-content">
+                        <div style="flex:1">
+                            <h4>${item.medicationName || 'Medicamento'}</h4>
+                            <p>${new Date(item.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                        ${item.containsDangerousColorants ? `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>` : `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').classList.remove('hidden');
+                currentImageData = { type: file.type, base64: e.target.result.split(',')[1] };
+                checkMedication('Imagem enviada', currentImageData);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            currentImageData = null;
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            const query = document.getElementById('queryInput').value.trim();
+            if (query) checkMedication(query);
+        }
+
+        async function checkMedication(searchQuery, imageData = null) {
+            const submitBtn = document.getElementById('submitBtn');
+            const queryInput = document.getElementById('queryInput');
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            submitBtn.disabled = true;
+            queryInput.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Verificando...';
+            resultsContainer.innerHTML = '';
+
+            try {
+                // Chamar nosso backend ao invés da API diretamente
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        searchQuery: imageData ? null : searchQuery,
+                        imageData: imageData
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erro ao processar requisição');
+                }
+
+                const result = await response.json();
+
+                const newResult = { 
+                    ...result, 
+                    timestamp: new Date().toISOString(), 
+                    searchQuery: searchQuery 
+                };
+                
+                displayResult(newResult);
+                
+                history = [newResult, ...history.slice(0, 19)];
+                saveHistory();
+                renderHistory();
+
+            } catch (error) {
+                console.error('Error:', error);
+                displayError('Erro ao analisar medicamento: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                queryInput.disabled = false;
+                submitBtn.textContent = 'Verificar Medicamento';
+            }
+        }
+
+        function displayResult(result) {
+            const container = document.getElementById('resultsContainer');
+            const isDangerous = result.containsDangerousColorants;
+
+            container.innerHTML = `
+                <div class="result-card ${isDangerous ? 'danger' : 'safe'}">
+                    <div class="result-header">
+                        <div class="result-icon ${isDangerous ? 'danger' : 'safe'}">
+                            ${isDangerous ? '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' : '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'}
+                        </div>
+                        <div style="flex:1">
+                            <h3 class="result-title ${isDangerous ? 'danger' : 'safe'}">
+                                ${isDangerous ? '⚠️ ATENÇÃO - CONTÉM CORANTES!' : '✓ Seguro para Uso'}
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="result-info">
+                        <div><label>Medicamento:</label><p>${result.medicationName}</p></div>
+                        ${result.laboratory ? `<div><label>Laboratório:</label><p>${result.laboratory}</p></div>` : ''}
+                        ${result.activeIngredient ? `<div><label>Princípio Ativo:</label><p>${result.activeIngredient}</p></div>` : ''}
+                        ${result.foundColorants?.length ? `<div><label style="color:#dc2626">Corantes Perigosos:</label><ul>${result.foundColorants.map(c => `<li style="color:#7f1d1d;font-weight:600">• ${c}</li>`).join('')}</ul></div>` : ''}
+                        ${result.allColorants?.length ? `<div><label>Todos os Corantes:</label><p>${result.allColorants.join(', ')}</p></div>` : ''}
+                        ${result.notes ? `<div class="result-notes"><label>Observações:</label><p>${result.notes}</p></div>` : ''}
+                        <div class="result-confidence">Confiabilidade: <span style="font-weight:500;text-transform:capitalize">${result.confidence}</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayError(message) {
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="error-card">
+                    <div class="error-content">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <div><h3>Erro na Verificação</h3><p>${message}</p></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>
